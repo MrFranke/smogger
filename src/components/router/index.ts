@@ -1,42 +1,44 @@
-import Koa, {Context} from "koa";
-import koaCompose from "koa-compose";
+import Koa, { Context } from 'koa';
+import koaCompose from 'koa-compose';
 
-import { createRouter } from "./generate";
-import { compose, formatSwaggerPath } from "../utils";
+import { createRouter } from './generate';
+import { compose, formatSwaggerPath } from '../utils';
 
-import { getFromCache, setToCache } from "../cache";
-import Application = require("koa");
-import {OpenAPIV3} from "openapi-types";
+import { getFromCache, setToCache } from '../cache';
+import * as Application from 'koa';
+import { OpenAPIV3 } from 'openapi-types';
 
 type Middleware = (ctx: Context, next: any) => void;
 
 export type ProcessingMiddleware = (
   path: string,
   method: string,
-  data?: any
+  data?: any,
 ) => any;
 
-const dataToResponse: (data: string, ctx: Context) => string = (data, ctx) =>
-  (ctx.body = data);
+const dataToResponse: (data: string, ctx: Context) => string = (
+  data,
+  ctx,
+) => (ctx.body = data);
 
 type CreateProccesingMiddleware = (
-  processors: Array<ProcessingMiddleware>
+  processors: Array<ProcessingMiddleware>,
 ) => Middleware;
 
 const exposeRequestProps = (ctx: Context) => {
   const {
     req: { method },
-    _matchedRoute
+    _matchedRoute,
   } = ctx;
   const path = formatSwaggerPath(_matchedRoute);
 
   return {
     path,
-    method: method ? method.toLowerCase() : undefined
+    method: method ? method.toLowerCase() : undefined,
   };
 };
 
-const createRouteMiddlewares = (paths: OpenAPIV3.PathObject) => {
+const createRouteMiddlewares = (paths: OpenAPIV3.PathsObject) => {
   const router = createRouter(paths);
 
   return [router.routes(), router.allowedMethods()];
@@ -52,7 +54,7 @@ const setRequestStateMiddleware: Middleware = (ctx, next) => {
   ctx.state = {
     ...ctx.state,
     path,
-    method
+    method,
   };
 
   next();
@@ -75,7 +77,7 @@ const cacheMiddleware: Middleware = (ctx, next) => {
 };
 
 export const createProcessingMiddleware: CreateProccesingMiddleware = (
-  middlewares: ProcessingMiddleware[]
+  middlewares: ProcessingMiddleware[],
 ) => (ctx, next) => {
   const { path, method } = ctx.state;
 
@@ -94,15 +96,16 @@ export const createProcessingMiddleware: CreateProccesingMiddleware = (
 
 export const createHTTPServer = (
   { port }: { port: number },
-  middlewares: ProcessingMiddleware[]
-) => (paths: OpenAPIV3.PathObject): Application => {
+  middlewares: ProcessingMiddleware[],
+) => (paths: OpenAPIV3.PathsObject): Application => {
   const app = new Koa();
 
+  // @ts-ignore
   const serverMiddlewares = koaCompose([
     ...createRouteMiddlewares(paths),
     setRequestStateMiddleware,
     cacheMiddleware,
-    createProcessingMiddleware(middlewares)
+    createProcessingMiddleware(middlewares),
   ]);
 
   app.use(serverMiddlewares);

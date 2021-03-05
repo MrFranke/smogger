@@ -1,6 +1,6 @@
 import { entries } from '../utils';
 import { allOf, anyOf, oneOf } from './combiners';
-import { OpenAPIV3, IJsonSchema } from 'openapi-types';
+import { OpenAPIV3, IJsonSchema, OpenAPIV2 } from 'openapi-types';
 
 export type MutatorItems = (schema: IJsonSchema) => Array<any>;
 export type Mutators = {
@@ -16,11 +16,10 @@ type AllowHTTPMethod =
   | 'patch'
   | 'head'
   | 'trace';
-type Document = OpenAPIV3.Document;
 type Operation = OpenAPIV3.OperationObject;
 
 export const getMethodModel: (
-  spec: Document,
+  spec: OpenAPIV3.Document,
 ) => (
   path: string,
   method: AllowHTTPMethod,
@@ -31,21 +30,22 @@ export const getMethodModel: (
   if (spec.paths[path] === undefined) {
     throw new Error(`Path ${path} not found in spec`);
   }
-  // @ts-ignore
-  if (spec.paths[path][method] === undefined) {
+  
+  if (spec.paths[path]?.[method] === undefined) {
     throw new Error(`Method ${method} not found in ${path}`);
   }
-  // @ts-ignore
-  return spec.paths[path][method];
+  
+  return spec.paths[path]?.[method];
 };
 
 export const getResponseModel = (
-  method: any,
-  status = 200,
+  method: OpenAPIV3.OperationObject,
+  status = '200',
   contentType = 'application/json',
 ) => {
   try {
-    return method.responses[status].content[contentType].schema;
+    // @ts-ignore because method.responses?.[status] can be string ($ref), but not in this case
+    return method.responses?.[status].content[contentType].schema;
   } catch (e) {
     throw new Error(`Response for status ${status} not found`);
   }
