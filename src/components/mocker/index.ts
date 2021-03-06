@@ -12,9 +12,12 @@ const getFakerMethod = (path: string) => objectPath(faker, path);
 const createEnum = (
   enumElements: Array<string | number | boolean | {}>,
 ) => randomElement(enumElements);
+
 const createDate = () =>
   faker.date.between(new Date('2015-01-01'), new Date('2021-01-01'));
+
 const createBoolean = () => faker.random.boolean();
+
 const createImageLink = (
   provider: string,
   width: number = 200,
@@ -23,10 +26,12 @@ const createImageLink = (
   provider
     .replace('<width>', String(width))
     .replace('<height>', String(height));
+
 const createNumber = (min: number = 0, max: number = 9999999) => {
   const options = { min, max };
   return faker.random.number(options);
 };
+
 const createString = (format: string = 'random.words') => (
   min: number,
   max: number,
