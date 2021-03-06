@@ -1,8 +1,8 @@
 import { entries } from '../utils';
 import { allOf, anyOf, oneOf } from './combiners';
-import { OpenAPIV3, IJsonSchema, OpenAPIV2 } from 'openapi-types';
+import { OpenAPIV3 } from 'openapi-types';
 
-export type MutatorItems = (schema: IJsonSchema) => Array<any>;
+export type MutatorItems = (schema: OpenAPIV3.ArraySchemaObject) => any[];
 export type Mutators = {
   items?: MutatorItems;
 };
@@ -52,7 +52,7 @@ export const getResponseModel = (
 };
 
 // @ts-ignore
-export const processor = (cb, mutators, schema) => {
+export const processor = (cb, mutators: Mutators, schema) => {
   // @ts-ignore
   const next = processor.bind(null, cb, mutators);
 
@@ -69,7 +69,6 @@ export const processor = (cb, mutators, schema) => {
 
   if (schema.items) {
     if (mutators.items) {
-      // @ts-ignore
       return mutators.items(schema).map(item => next(item));
     }
     return next(schema.items);

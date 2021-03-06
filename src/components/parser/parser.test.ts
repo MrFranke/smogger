@@ -31,4 +31,48 @@ test('getResponseModel: get current response', () => {
   );
 });
 
-test('processor', () => {});
+test('processor: create mock data from object schema', () => {
+  const schema = SPEC.components.schemas.Pet;
+  const mockFakeDataGenerator = (schema: OpenAPIV3.SchemaObject) =>
+    schema.type;
+  const result = processor(mockFakeDataGenerator, {}, schema);
+  expect(result).toEqual({
+    id: 'integer',
+    name: 'string',
+    tag: 'string',
+  });
+});
+
+test('processor: create mock data from array schema', () => {
+  const schema = SPEC.components.schemas.Pets;
+  // @ts-ignore
+  schema.items = SPEC.components.schemas.Pet;
+
+  const mockFakeDataGenerator = (schema: OpenAPIV3.SchemaObject) =>
+    schema.type;
+  const mutators = {
+    items: (schema: OpenAPIV3.ArraySchemaObject) => {
+      console.log(schema);
+      return new Array(3).fill(schema.items);
+    },
+  };
+
+  const result = processor(mockFakeDataGenerator, mutators, schema);
+  expect(result).toEqual([
+    {
+      id: 'integer',
+      name: 'string',
+      tag: 'string',
+    },
+    {
+      id: 'integer',
+      name: 'string',
+      tag: 'string',
+    },
+    {
+      id: 'integer',
+      name: 'string',
+      tag: 'string',
+    },
+  ]);
+});
